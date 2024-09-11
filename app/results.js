@@ -12,9 +12,10 @@ export default function ModalScreen() {
   const windowWidth = Dimensions.get('window').width;
     const [visible, setVisible] = useState(false);
     const [results, setResults] = useState("");
+    const [persistResults, setPersistResults] = useState([]);
     const [data, setData] = useState([]);
     
-    const { _results, _data } = useLocalSearchParams();
+    const { _results, _data, _persistResults } = useLocalSearchParams();
 
     useEffect(() => {
       if (_results) {
@@ -26,6 +27,11 @@ export default function ModalScreen() {
         setData(JSON.parse(_data)); 
       }
     }, [_data]);
+    useEffect(() => {
+      if (_persistResults) {
+        setPersistResults(_persistResults); 
+      }
+    }, [_persistResults]);
     const moreInfo = (
   <Modal isVisible={visible}>
   <View className="bg-gray-100 h-min p-4 rounded-lg">
@@ -65,7 +71,7 @@ export default function ModalScreen() {
     return (
       <SafeAreaView className="bg-gray-100 h-full   ">
         {moreInfo}
-        <Pressable onPress={() => router.push({pathname: 'home'})}>
+        <Pressable onPress={() => router.push({pathname: 'home', params: {persistResults: persistResults}})}>
           <Text className={"mx-auto mt-4 text-5xl text-gray-400 font-black"}>Derma Scan</Text>
         </Pressable>
       <View className={"w-[80vw] h-[100%] mx-auto flex flex-col justify-evenly"}>
@@ -73,7 +79,7 @@ export default function ModalScreen() {
         <Pressable title="" onPress={() => setVisible(true)} className={" font-bold py-3 px-8 rounded-full bg-blue-500 text-white active:bg-blue-700"}>
           <Text className={"m-auto text-xl text-white font-bold"}>More Info</Text>
         </Pressable>
-        <Pressable title="" onPress={() => router.push({pathname: 'home'})} className={" font-bold py-3 px-8 rounded-full bg-blue-500 text-white active:bg-blue-700"}>
+        <Pressable title="" onPress={() => router.push({pathname: 'home', params: {persistResults: persistResults}})} className={" font-bold py-3 px-8 rounded-full bg-blue-500 text-white active:bg-blue-700"}>
           <Text className={"m-auto text-xl text-white font-bold"}>Back Home</Text>
         </Pressable>
         <Image

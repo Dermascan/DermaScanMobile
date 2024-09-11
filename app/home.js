@@ -1,6 +1,6 @@
 import Modal from "react-native-modal";
-import React, { useState} from 'react';
-import { router } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
 
 import * as ImagePicker from 'expo-image-picker';
 import {Text, View, Image, SafeAreaView, TextInput, Pressable, Dimensions, ScrollView} from 'react-native';
@@ -9,10 +9,19 @@ import {manipulateAsync} from 'expo-image-manipulator';
 import * as WebBrowser from 'expo-web-browser';
 
 export default function ModalScreen() {
+  const [status, requestPermission] = ImagePicker.useCameraPermissions();
   const windowWidth = Dimensions.get('window').width;
 
   const [things, setResults] = useState([]);
-  const [status, requestPermission] = ImagePicker.useCameraPermissions();
+
+  const { persistResults } = useLocalSearchParams();
+
+  useEffect(() => {
+    console.log(persistResults);
+    if (persistResults) {
+      setResults(JSON.parse(persistResults)); 
+    }
+  }, [persistResults]);
   const [visible, setVisible] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState(null);
@@ -37,15 +46,18 @@ export default function ModalScreen() {
         setUploading(true);
       }
     }else{
-      setVisible(false);
-      ImagePicker.requestCameraPermissionsAsync()
-      ImagePicker.requestMediaLibraryPermissionsAsync()
+      //setVisible(false);
+      if(type == "cam"){
+        ImagePicker.requestCameraPermissionsAsync()
+      } else {
+        ImagePicker.requestMediaLibraryPermissionsAsync()
+      }
     }
   };
 
   const send = async ()=>{
     setLoading(true);
-    const base64 = await manipulateAsync(image, [{resize: {width: 28, height: 28}}], {base64: true}).then((result) => {
+    const base64 = await manipulateAsync(image, [], {base64: true}).then((result) => {
       return result.base64;
     });
     var requestOptions = {
@@ -79,15 +91,15 @@ export default function ModalScreen() {
     setResults([...things, {data: sortedConfidences, dateTime: new Date()}]);
     setUploading(false);
     setLoading(false);
-    if(sortedConfidences[0][2] || (sortedConfidences[1][2] && sortedConfidences[1][1] > 0.2) || (sortedConfidences[2][2] && sortedConfidences[2][1] > 0.2)){
+    if(sortedConfidences[0][2]){
       router.push({
         pathname: 'results',
-        params: { _results: "potential", _data: JSON.stringify(sortedConfidences) }
+        params: { _results: "potential", _data: JSON.stringify(sortedConfidences), _persistResults: JSON.stringify([...things, {data: sortedConfidences, dateTime: new Date()}]) }
       });
     }else{
       router.push({
         pathname: 'results',
-        params: { _results: "benign", _data: JSON.stringify(sortedConfidences) }
+        params: { _results: "benign", _data: JSON.stringify(sortedConfidences), _persistResults: JSON.stringify([...things, {data: sortedConfidences, dateTime: new Date()}]) }
       });
     }
 
@@ -125,16 +137,17 @@ export default function ModalScreen() {
     if(sorteddata[0][2]){
       router.push({
         pathname: 'results',
-        query: { results: "potential", data: sorteddata }
+        query: { _results: "potential", _data: JSON.stringify(sorteddata), _persistResults: JSON.stringify(things) }
       }); 
     }else{
       router.push({
         pathname: 'results',
-        query: { results: "begnin", data: sorteddata }
-      }); 
+        params: { _results: "benign", _data: JSON.stringify(sorteddata), _persistResults: JSON.stringify(things) }
+      });
     }
   }
   const homescreen = (
+    <View className={"bg-gray-100 "}>
     <SafeAreaView className="bg-gray-100 h-full relative ">
       <Modal isVisible={visible}>
         <View className="bg-gray-100 h-min p-4 rounded-lg">
@@ -167,7 +180,7 @@ export default function ModalScreen() {
         <Pressable onPress={()=>{setVisible(true);Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);}} className={" bg-blue-500 text-white font-bold py-3 px-8 rounded-full active:bg-blue-700"}>
           <Text className={"m-auto text-2xl text-white font-bold"}>Start Scan</Text>
         </Pressable>
-        <Pressable onPress={()=>{router.push({pathname: 'login'});Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);}} className={"mt-2"}>
+        <Pressable onPress={()=>{router.push({pathname: '/'});Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);}} className={"mt-2"}>
               <Text className={"text-center text-blue-500 text-lg"}>Logout</Text>
         </Pressable>
 
@@ -200,6 +213,7 @@ export default function ModalScreen() {
         resizeMode="contain"
       />
    </SafeAreaView>
+    </View>
   );
   return (<>{!uploading ? homescreen : upload }</>);
 }

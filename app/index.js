@@ -1,11 +1,7 @@
-import Modal from "react-native-modal";
-import React, { useState} from 'react';
+import React from 'react';
 import { router } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import {Text, View, Image, SafeAreaView, TextInput, Pressable, Dimensions, ScrollView} from 'react-native';
+import {Text, View, Image, SafeAreaView, TextInput, Pressable, Dimensions} from 'react-native';
 import * as Haptics from 'expo-haptics';
-import {manipulateAsync} from 'expo-image-manipulator';
-import * as WebBrowser from 'expo-web-browser';
 
 export default function ModalScreen() {
   const windowWidth = Dimensions.get('window').width;
@@ -57,7 +53,7 @@ export default function ModalScreen() {
           </Pressable>
           <Text className={'text-center mt-2'}>
             {"Don't have an account? "}
-            <Text className={"text-blue-500"} onPress={() => router.push({pathname: 'login'})}>Sign Up</Text>
+            <Text className={"text-blue-500"} onPress={() => router.push({pathname: '/'})}>Sign Up</Text>
           </Text>
         </View>
       </View>
